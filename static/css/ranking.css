@@ -1,0 +1,42 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    padding: 20px;
+    background-image: url('../img/bg.jpg'); /* 替换为背景图片的路径 */
+    background-size: cover; /* 让图片覆盖整个背景 */
+    background-position: center; /* 居中显示背景 */
+    background-repeat: no-repeat; /* 不重复背景 */
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: rgba(243, 229, 215, 0.9);;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+.ranking-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.ranking-item {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.ranking-item:last-child {
+    border-bottom: none;
+}
+
+.ranking-item span {
+    font-weight: bold;
+    margin-right: 10px;
+}

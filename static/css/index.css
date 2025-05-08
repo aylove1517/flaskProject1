@@ -1,0 +1,9 @@
+.title {
+    font-family: "KaiTi", "楷体", serif;
+    text-align: center;
+    font-size: 5em;
+    margin-top: 50px;
+    font-weight: 900;
+    position: relative; /* 保证后面的元素不会受影响 */
+    z-index: -1; /* 将文字层级置于背景层以下 */
+}

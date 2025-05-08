@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>中国象棋</title>
+    <meta name="viewport" content="width=device-width; initial-scale=1.0"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/setting.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='js/set.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/musicControl.js') }}"></script>
+    <script>
+        const MusicPlayer = {
+            init: function() {
+                const savedMusic = localStorage.getItem("selectedMusic") || "{{ url_for('static', filename='audio/video.mp3') }}";
+                const backgroundMusic = document.getElementById("backgroundMusic");
+                backgroundMusic.src = savedMusic;
+                backgroundMusic.play();
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", () => MusicPlayer.init());
+    </script>
+</head>
+
+<body>
+<div style="text-align: right; padding: 10px;">
+    <button id="langToggle" style="
+        padding: 6px 12px;
+        background-color: #f5f5f5;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    " onmouseover="this.style.backgroundColor='#e0e0e0'" onmouseout="this.style.backgroundColor='#f5f5f5'">
+        中文/English
+    </button>
+</div>
+
+<div class="settings-container">
+    <h1>设置</h1>
+
+    <div class="setting-option">
+        {% if session.get('username') %}
+            <span id="nameDisplay" data-username="{{ session['username'] }}">{{ session['username'] }}</span>
+        {% else %}
+            <span id="nameDisplay" data-username="未登录">未登录</span>
+        {% endif %}
+    </div>
+
+    <div class="setting-option">
+        <span>在线对好友隐身</span>
+        <label class="switch">
+            <input type="checkbox" checked>
+            <span class="slider round"></span>
+        </label>
+    </div>
+
+    <div class="setting-option">
+        <span>选择背景音乐</span>
+        <select id="musicSelect">
+            <option value="none">无</option>
+            <option value="{{ url_for('static', filename='audio/video.mp3') }}">三分天下</option>
+            <option value="{{ url_for('static', filename='audio/xwx.mp3') }}">象王行</option>
+            <option value="{{ url_for('static', filename='audio/jzt.mp3') }}">九州同</option>
+        </select>
+    </div>
+
+    <audio id="backgroundMusic" loop>
+        <source src="{{ url_for('static', filename='audio/video.mp3') }}" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <div class="setting-option">
+        <a href="/">回到首页</a>
+    </div>
+</div>
+
+<script>
+    const langData = {
+        zh: {
+            title: "设置",
+            edit: "修改",
+            save: "保存",
+            invisible: "在线对好友隐身",
+            selectMusic: "选择背景音乐",
+            back: "回到首页"
+        },
+        en: {
+            title: "Settings",
+            edit: "Edit",
+            save: "Save",
+            invisible: "Invisible to friends",
+            selectMusic: "Select background music",
+            back: "Back to Home"
+        }
+    };
+
+    function setLanguage(lang) {
+        localStorage.setItem("lang", lang);
+        const data = langData[lang];
+
+        document.querySelector("h1").textContent = data.title;
+        document.querySelectorAll(".setting-option")[1].querySelector("span").textContent = data.invisible;
+        document.querySelectorAll(".setting-option")[2].querySelector("span").textContent = data.selectMusic;
+        document.querySelectorAll(".setting-option")[3].querySelector("a").textContent = data.back;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const savedLang = localStorage.getItem("lang") || "zh";
+        setLanguage(savedLang);
+
+        document.getElementById("langToggle").addEventListener("click", function () {
+            const currentLang = localStorage.getItem("lang") || "zh";
+            const newLang = currentLang === "zh" ? "en" : "zh";
+            setLanguage(newLang);
+        });
+    });
+</script>
+
+</body>
+</html>

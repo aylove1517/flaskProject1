@@ -1,0 +1,249 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>中国象棋</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chess.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    {% if load_script %}
+        <script type="text/javascript" src="../static/js/common.js"></script>
+        <script type="text/javascript" src="../static/js/play.js"></script>
+        <script type="text/javascript" src="../static/js/AI.js"></script>
+        <script type="text/javascript" src="../static/js/aiplay.js"></script>
+        {#        <script type="text/javascript" src="../static/js/autoPlay.js"></script>#}
+        <script type="text/javascript" src="../static/js/gambit.js"></script>
+        <script type="text/javascript" src="../static/js/clasli.js"></script>
+        <script type="text/javascript" src="../static/js/musicControl.js"></script>
+        <script type="text/javascript" src="../static/js/auth.js"></script> <!-- 引入新文件 -->
+    {% endif %}
+    <style>
+        /* 导航栏样式 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-bottom-left-radius: 10px;
+            z-index: 1000;
+        }
+
+        .navbar a {
+            margin: 0 10px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .navbar a:hover {
+            color: #007bff;
+        }
+    </style>
+</head>
+
+<body>
+<!-- 导航栏 -->
+<div class="navbar">
+    {% if not session.get('username') %}
+        <a id="guestBtn" href="/guest">游客登录</a>
+        <a id="loginBtn" href="/login">登录</a>
+    {% else %}
+        <span style="margin-right: 10px;">欢迎，{{ session['username'] }}！</span>
+        <a id="logoutBtn" href="/logout">注销</a>
+        <a href="#" id="languageToggle">English</a>
+    {% endif %}
+</div>
+
+
+<div class="title">中 国 象 棋</div>
+
+<div id="chessBox" class="chess_box">
+    <canvas id="chess"></canvas>
+    <audio src="{{ url_for('static', filename='audio/click.wav') }}" id="clickAudio" preload="auto"></audio>
+    <audio src="{{ url_for('static', filename='audio/select.wav') }}" id="selectAudio" preload="auto"></audio>
+    <div class="bn_box" id="bnBox">
+        <input type="button" name="restartBtn" id="restartBtn" value="重新开始" data-i18n="restart"/>
+        <input type="button" name="gohomeBtn" id="gohomeBtn" value="返回首页" data-i18n="home"/>
+        <input type="button" name="regretBtn" id="regretBtn" value="悔棋" data-i18n="regret"/>
+
+    </div>
+</div>
+<div class="menu_box" id="menuBox">
+    <div class="menu_init" id="indexBox">
+        <a id="indexDy" data-i18n="vs_ai">人机对弈</a>
+        <a id="indexPk" data-i18n="ai_battle">AI对局</a>
+        <a id="indexQj" data-i18n="challenge">挑战棋局</a>
+        <a id="stypeBtn" data-i18n="change_skin">更换皮肤</a>
+        <a href="/ranking" style="text-decoration: none;" data-i18n="ranking">排名表</a>
+        <a href="/setting" style="text-decoration: none;" data-i18n="settings">基本设置</a>
+
+    </div>
+    <div class="menu_dy" id="menuDy">
+        <div class="menu_info">
+            <div class="menu_fh" id="menuFh"></div>
+            <label>
+                <input name="depth" type="radio" value="2"> 菜鸟水平</label><br/>
+            <label>
+                <input name="depth" type="radio" value="3" checked> 中级水平</label><br/>
+            <label>
+                <input name="depth" type="radio" value="4"> 高手水平</label>
+        </div>
+        <a id="playBtn">开始对弈</a>
+    </div>
+    <!-- 真人PK的邀请框（默认隐藏） -->
+    <div class="menu_pk" id="menuPk">
+        <div class="menu_info">
+            <div class="menu_fh" id="menuAI"></div>
+            <label>
+                <input name="depth" type="radio" value="2"> 菜鸟水平</label><br/>
+            <label>
+                <input name="depth" type="radio" value="3" checked> 中级水平</label><br/>
+            <label>
+                <input name="depth" type="radio" value="4"> 高手水平</label>
+        </div>
+        <a id="PKBtn">开始对弈</a>
+    </div>
+    <div class="menu_qj" id="menuQj">
+        <div class="menu_info">
+            <div class="menu_fh" id="menuGb"></div>
+            <label>
+                <input name="clasli" type="radio" value="0" checked> 八卦阵法</label><br/>
+            <label>
+                <input name="clasli" type="radio" value="1"> 很二棋局</label><br/>
+            <label>
+                <input name="clasli" type="radio" value="2"> 七星会阵</label><br/>
+            <label>
+                <input name="clasli" type="radio" value="3"> 双马夺秣</label>
+        </div>
+        <a id="clasliBtn">开始挑战</a>
+    </div>
+</div>
+<audio id="backgroundMusic" loop>
+    <source src="{{ url_for('static',filename='audio/video.mp3') }}" type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+
+<script>
+    const MusicPlayer = {
+        init: function () {
+            const savedMusic = localStorage.getItem("selectedMusic") || "audio/video.mp3"; // 默认音乐
+            const backgroundMusic = document.getElementById("backgroundMusic");
+            backgroundMusic.src = savedMusic;
+            backgroundMusic.play();
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+        MusicPlayer.init()
+    });
+
+    function copyToClipboard(text) {
+        const tempInput = document.createElement("textarea");
+        tempInput.value = text;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const inviteBtn = document.getElementById("inviteBtn");
+
+        if (inviteBtn) {
+            inviteBtn.addEventListener("click", function () {
+                console.log("发送邀请按钮被点击！");
+
+                const inviteLink = `http://192.168.31.171:5005/game?room=${Math.random().toString(36).substr(2, 6)}`;
+                copyToClipboard(inviteLink);
+                alert("邀请链接已复制，请发送给好友：" + inviteLink);
+            });
+        } else {
+            console.error("找不到 'inviteBtn' 按钮！");
+        }
+    });
+
+        const translations = {
+        en: {
+            restart: "Restart",
+            home: "Go Home",
+            regret: "Undo",
+            vs_ai: "Play with AI",
+            ai_battle: "AI Battle",
+            challenge: "Challenge",
+            change_skin: "Change Skin",
+            ranking: "Ranking",
+            settings: "Settings",
+            logout: "Logout",
+            guest_login: "Guest Login",
+            login: "Login",
+            welcome: "Welcome, "
+        },
+        zh: {
+            restart: "重新开始",
+            home: "返回首页",
+            regret: "悔棋",
+            vs_ai: "人机对弈",
+            ai_battle: "AI对局",
+            challenge: "挑战棋局",
+            change_skin: "更换皮肤",
+            ranking: "排名表",
+            settings: "基本设置",
+            logout: "注销",
+            guest_login: "游客登录",
+            login: "登录",
+            welcome: "欢迎，"
+        }
+    };
+
+    let currentLang = localStorage.getItem("lang") || "zh";
+
+    function updateLanguage() {
+        document.querySelectorAll("[data-i18n]").forEach(el => {
+            const key = el.getAttribute("data-i18n");
+            if (translations[currentLang][key]) {
+                if (el.tagName.toLowerCase() === "input") {
+                    el.value = translations[currentLang][key];
+                } else {
+                    el.textContent = translations[currentLang][key];
+                }
+            }
+        });
+
+        // 更新按钮文字
+        const langToggle = document.getElementById("languageToggle");
+        if (langToggle) {
+            langToggle.textContent = currentLang === "zh" ? "English" : "中文";
+        }
+
+        // 更新欢迎语（用户名不翻译）
+        const welcomeSpan = document.querySelector(".navbar span");
+        if (welcomeSpan) {
+            const username = "{{ session['username'] }}" || "";
+            welcomeSpan.textContent = translations[currentLang].welcome + username + "！";
+        }
+
+        // 更新 guest/login/logout 按钮（可选）
+        const guestBtn = document.getElementById("guestBtn");
+        const loginBtn = document.getElementById("loginBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (guestBtn) guestBtn.textContent = translations[currentLang].guest_login;
+        if (loginBtn) loginBtn.textContent = translations[currentLang].login;
+        if (logoutBtn) logoutBtn.textContent = translations[currentLang].logout;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        updateLanguage();
+
+        document.getElementById("languageToggle").addEventListener("click", function () {
+            currentLang = currentLang === "zh" ? "en" : "zh";
+            localStorage.setItem("lang", currentLang);
+            updateLanguage();
+        });
+    });
+
+</script>
+</body>
+
+</html>

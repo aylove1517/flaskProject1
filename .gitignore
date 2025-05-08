@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.py~
+*.so
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+env/
+.vscode/
+
+# Flask
+instance/
+
+# Database
+*.db
+*.sqlite3
+
+# IDE
+.idea/
+
+# Logs
+*.log
+
+# Environment Variables
+.env
