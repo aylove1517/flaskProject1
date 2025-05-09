@@ -55,7 +55,6 @@ Initialize the database tables
 
 Run the application with python app.py
 
-Access the platform at http://127.0.0.1:5000
 
 Future Work
 Integrate reinforcement learning or self-play training
